@@ -1,0 +1,45 @@
+﻿      foreach (spLogBuff spLogLine in spLogLines)
+                {
+                    if (spLogLine.csInfo.Contains("iCashCount end"))
+                    {
+                        cashUnitCDM.iCashCount cashCountObject = cashDepositTransaction.returnIcashCountObject(spLogLine.csInfo);
+                    }
+                }
+
+
+                foreach (spLogBuff spLogLine in spLogLines)
+                {
+                    if (spLogLine.csInfo.Contains("ParamString: CashInResult:"))
+                    {
+                        cashUnitCDM.hrCashin hrCashInObject = cashDepositTransaction.hrCashInObject(spLogLine.csInfo);
+                    }
+                }
+
+
+
+                foreach (spLogBuff spLogLine in spLogLines)
+                {
+                    if (spLogLine.csInfo.Contains("iStoreMoneyEx end"))
+                    {
+                        cashUnitCDM.iStoreMoneyEx iStoreMoneyExObject = cashDepositTransaction.iStoreMoneyExObject(spLogLine.csInfo);
+                    }
+                }
+
+
+
+
+                if (spLogFileNames.Count == 1 && cashInEndLines.Count == 0)
+                { MessageBox.Show("No CashIn Transaction in the log " + spLogFileNameStr); }
+
+
+
+
+
+                for (int cashInEndLinesCount = 0; cashInEndLinesCount < cashInEndLines.Count; cashInEndLinesCount++)
+                {
+                    allCashInArray = parseOperations.parseStringCashInEnd(cashInEndLines[cashInEndLinesCount].csInfo);
+                }
+
+                //fillRichTextBox(allCashInArray);
+                totalDeposit(allCashInArray);
+                allCashInArray.Clear();

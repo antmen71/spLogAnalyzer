@@ -1,0 +1,103 @@
+﻿ private void allCashInBtn_Click(object sender, EventArgs e)
+        {
+            //List<spLogBuff> cashInEndLines = new List<spLogBuff>();
+            //List<spLogBuff> cashInStartLines = new List<spLogBuff>();
+            //List<spLogBuff> cashInLinesIndex = new List<spLogBuff>();
+
+
+            foreach (string spLogFileNameStr in spLogFileNames)
+            {
+                FileStream spLogFile = File.OpenRead(spLogFileNameStr);
+                tagLogHead logHeader = returnLogHeader(spLogFile);
+                if (logHeader.dwSize != 28)
+                {
+                    MessageBox.Show("SP Log format is not correct. Please check the file.\r\n" + spLogFileNameStr);
+                    return;
+                }
+
+
+                spLogBuff[] spLogLines = createFileStreamHeaderSpLogLineArray(spLogFileNameStr);
+                //List<cashUnitCIM.lppCashIn> allCashInArray = new List<cashUnitCIM.lppCashIn>();
+                //cashUnitCIM.lppCashIn[] lppCashInArray = new cashUnitCIM.lppCashIn[cashInEndLines.Count];
+                //cash in start ve cash in end message success lines
+                //cashInEndLines = cashDepositTransaction.returnCashInEndLines(spLogLines);
+                //cashInStartLines = cashDepositTransaction.returnCashInStartLines(spLogLines);
+                List<Form1.spLogBuff> cashInLines = cashDepositTransaction.returnCashInLines(spLogLines);
+                if (spLogFileNames.Count == 1 && cashInLines.Count == 0)
+                { MessageBox.Show("No CashIn Transaction in the log " + spLogFileNameStr); }
+                //Dictionary<uint, string> cashInLinesDict = new Dictionary<uint, string>();
+                cashInLines.Reverse();
+
+
+                while (cashInLines.Count > 0)
+                {
+                    int removesIndex = parseOperations.returnCashInTransaction(cashInLines).Count;
+                    List<Form1.spLogBuff> cashInReturnLines = parseOperations.returnCashInTransaction(cashInLines);
+                    bool moreCashInLines = cashDepositTransaction.prepareCashInObjectsForCompareCashInInformation(cashInReturnLines);
+
+                    if (moreCashInLines == true)
+                    {
+                        cashInLines.RemoveRange(0, removesIndex);
+                    }
+                    else
+                    {
+                        cashInLines.Clear();
+                    }
+                }
+
+                printOperations.allCashInObjectsTotal(cashDepositTransaction.cashCountTotal, cashDepositTransaction.hrCashInTotal, cashDepositTransaction.iStoreMoneyTotal, cashDepositTransaction.hrCashInEndTotal, cashDepositTransaction.cashInEndTotal, cashDepositTransaction.iRetractTotal);
+
+                //foreach (spLogBuff spLogLine in cashInStartLines)
+                //{
+                //    cashInLinesDict.Add(spLogLine.dwCurIndex, spLogLine.csInfo);
+                //}
+                //foreach (spLogBuff spLogLine in cashInEndLines)
+                //{
+                //    cashInLinesDict.Add(spLogLine.dwCurIndex, spLogLine.csInfo);
+                //}
+
+                //cashInLinesIndex.Sort();
+
+                //SortedDictionary<uint, string> sortedCashInLinesDict = new SortedDictionary<uint, string>(cashInLinesDict);
+
+               
+
+                //for (int cashInEndLinesCount = 0; cashInEndLinesCount < cashInEndLines.Count; cashInEndLinesCount++)
+                //{
+                //    allCashInArray = parseOperations.parseStringCashInEnd(cashInEndLines[cashInEndLinesCount]);
+                //}
+
+
+                //foreach (spLogBuff spLogLine in spLogLines)
+                //{
+                //    DateTime spLogLineDateTime = parseOperations.extractDateTimeFromSpLogLine(spLogLine);
+                //    DateTime cashInStartDateTime = parseOperations.extractDateTimeFromSpLogLine(cashInStartLines[1]);
+                //    DateTime cashInEndDateTime = parseOperations.extractDateTimeFromSpLogLine(cashInEndLines[1]);
+
+                //    if (spLogLineDateTime > parseOperations.extractDateTimeFromSpLogLine(cashInStartLines[1]) && spLogLineDateTime < parseOperations.extractDateTimeFromSpLogLine(cashInEndLines[1]))
+                //    {
+
+                //        if (spLogLine.csInfo.Contains("iCashCount end"))
+                //        {
+                //            cashUnitCIM.iCashCount cashCountObject = cashDepositTransaction.returnIcashCountObject(spLogLine);
+
+                //        }
+                //        else if (spLogLine.csInfo.Contains("ParamString: CashInResult:"))
+                //        {
+                //            cashUnitCIM.hrCashIn hrCashInObject = cashDepositTransaction.hrCashInObject(spLogLine);
+                //        }
+
+                //        else if (spLogLine.csInfo.Contains("iStoreMoneyEx end"))
+                //        {
+                //            cashUnitCIM.iStoreMoneyEx iStoreMoneyExObject = cashDepositTransaction.iStoreMoneyExObject(spLogLine);
+                //        }
+                //    }
+
+                //}
+
+                //fillRichTextBox(allCashInArray);
+                //cashDepositTransaction.totalDeposit(allCashInArray);
+                //allCashInArray.Clear();
+                //printOperations.fillRichTextBox(allCashInArray);
+            }
+        }

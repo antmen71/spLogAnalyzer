@@ -1,0 +1,326 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace spLogListener
+{
+    class cashUnitCDM
+    {
+
+        short usCount; //usCount = [6]
+        cashUnitCDM[] lppList; //lppList[0]
+
+        short usNumPhysicalCUs; // = [1]    
+        lppCashIn lppCashInStruct;
+
+        public static lppCashIn[] parseString(string cdmCULine)
+        {
+            string[] stringSeparators = new string[] { "\r\n" };
+
+            string[] cuParsedArray = cdmCULine.Split(stringSeparators, StringSplitOptions.None);
+
+            //usCount - kaç tane lppCashIn objesi olduğu, kaç tane kasetin sayacı değişti
+            string usNumberFromcdmCULine = cashUnitCDM.extractFromCdmCuLine(cuParsedArray, "usCount");
+            short usCountValue = Convert.ToInt16(splitString(usNumberFromcdmCULine));
+
+            //lppCashIn
+
+            lppCashIn[] lppCashInArray = new lppCashIn[usCountValue];
+            List<string> lppCashInList = new List<string>();
+            int lppCashInIndex = 0;
+            List<int> indexLppCashIn = new List<int>();
+            foreach (string str in cuParsedArray)
+            {
+                if (str.Contains("lppCashIn["))
+                {
+
+                    indexLppCashIn.Add(lppCashInIndex + 2);
+                }
+                lppCashInIndex++;
+            }
+
+            //how many lppNoteNumber are there, and create a lppNoteNumberArray with length
+            List<string> usNumberListcdmCULine = cashUnitCDM.extractFromCdmCuLineArray(cuParsedArray, "usNumOfNoteNumbers = [");
+
+            List<int> usNumberListValue = new List<int>();
+
+            foreach (string str in usNumberListcdmCULine)
+            { usNumberListValue.Add(Convert.ToInt16(splitString(str))); }
+
+            int usNumOfNotesTotal = 0;
+            foreach (int i in usNumberListValue)
+            { usNumOfNotesTotal += i; }
+
+            lppNoteNumber[] lppNoteNumberArray = new lppNoteNumber[usNumberListValue.Count + usNumOfNotesTotal];
+
+
+            int usNumOfNoteNumbersIndex = 0;
+
+            List<int> indexUsNumOfNoteNumbers = new List<int>();
+            foreach (string str in cuParsedArray)
+            {
+                if (str.Contains("lppNoteNumber["))
+                {
+
+                    indexUsNumOfNoteNumbers.Add(usNumOfNoteNumbersIndex + 2);
+
+                }
+                usNumOfNoteNumbersIndex++;
+            }
+
+            //for (int numOfNotesIndexValue = 0; numOfNotesIndexValue < usNumberListValue.Count; numOfNotesIndexValue++)
+            //{
+
+            //    lppNoteNumber[] noteDetail = returnNoteDetails(indexUsNumOfNoteNumbers[numOfNotesIndexValue], usNumberListValue[numOfNotesIndexValue], cuParsedArray, indexUsNumOfNoteNumbers);
+
+
+            //}
+
+            for (int i = 0; i < indexLppCashIn.Count; i++)
+            {
+                int index = indexLppCashIn[i];
+                string[] croppedArray = new string[17];
+                Array.Copy(cuParsedArray, index, croppedArray, 0, 17);
+                lppCashInArray[i].usNumber = Convert.ToInt16(splitString(croppedArray[0]));
+                lppCashInArray[i].fwType = splitString(croppedArray[1]);
+                lppCashInArray[i].fwItemType = splitString(croppedArray[2]);
+                lppCashInArray[i].cUnitID = splitString(croppedArray[3]);
+                lppCashInArray[i].cUnitIDHex = splitStringHexArray(croppedArray[4]);
+                lppCashInArray[i].cCurrencyID = splitString(croppedArray[5]);
+                lppCashInArray[i].cCurrencyIDHex = splitStringHexArray(croppedArray[6]);
+                lppCashInArray[i].ulValues = Convert.ToUInt16(splitString(croppedArray[7]));
+                lppCashInArray[i].ulCashInCount = Convert.ToUInt16(splitString(croppedArray[8]));
+                lppCashInArray[i].ulCount = Convert.ToUInt16(splitString(croppedArray[9]));
+                lppCashInArray[i].ulMaximum = Convert.ToUInt16(splitString(croppedArray[10]));
+                lppCashInArray[i].usStatus = splitString(croppedArray[11]);
+                lppCashInArray[i].bAppLock = Convert.ToBoolean(splitString(croppedArray[12]));
+                lppCashInArray[i].requestId = requestIdOperations.findRequestID(cdmCULine);
+                lppCashInArray[i].lppNoteNumberListStruct.usNumOfNoteNumbers = Convert.ToInt16(splitString(croppedArray[15]));
+
+
+                for (int numOfNotesIndexValue = 0; numOfNotesIndexValue < lppCashInArray[i].lppNoteNumberListStruct.usNumOfNoteNumbers; numOfNotesIndexValue++)
+                {
+                    lppNoteNumber[] noteDetail = returnNoteDetails(index + 21, lppCashInArray[i].lppNoteNumberListStruct.usNumOfNoteNumbers, cuParsedArray, indexUsNumOfNoteNumbers);
+                    lppCashInArray[i].lppNoteNumberListStruct.lppNoteNumberStruct = returnNoteDetails(index + 21, lppCashInArray[i].lppNoteNumberListStruct.usNumOfNoteNumbers, cuParsedArray, indexUsNumOfNoteNumbers);
+                }
+            }
+
+
+
+
+
+            return lppCashInArray;
+        }
+
+        public static string extractFromCdmCuLine(string[] strArray, string keyword)
+        {
+            string valueFromcdmCULine = Array.Find<string>(strArray, element => element.StartsWith(keyword));
+            return valueFromcdmCULine;
+
+        }
+
+        public static List<string> extractFromCdmCuLineArray(string[] strArray, string keyword)
+        {
+            List<string> valueFromcdmCULineArray = new List<string>();
+
+            foreach (string str in strArray)
+            {
+                if (str.Contains(keyword))
+                {
+                    valueFromcdmCULineArray.Add(str);
+
+                }
+
+            }
+
+
+
+            return valueFromcdmCULineArray;
+
+        }
+
+        public static string splitString(string strLine)
+        {
+            string valueFromLine;
+            List<string> valueFromLineArray = new List<string>();
+            if (strLine.Contains('[') && strLine.Contains(']'))
+            {
+                char[] splitChars = new char[] { '[', ']' };
+
+                valueFromLineArray = (List<string>)strLine.Split(splitChars).ToList<string>();
+            }
+            return valueFromLine = valueFromLineArray[1];
+
+        }
+
+        public static byte[] splitStringHexArray(string strLine)
+        {
+
+            List<string> valueFromLineArray = new List<string>();
+
+            char[] splitChars = new char[] { '[', ']', ' ' };
+
+
+            string[] hexStringValueArrayFromLine = strLine.Split(splitChars);
+            string hexStringValueFromLine = "";
+            foreach (string str in hexStringValueArrayFromLine)
+            {
+                hexStringValueFromLine += str;
+            }
+
+            byte[] hexValueFromLine = System.Text.Encoding.ASCII.GetBytes(hexStringValueFromLine);
+
+            return hexValueFromLine;
+
+        }
+
+        public static int[] splitStringIntArray(string strLine)
+        {
+
+            List<int> valueFromLineArray = new List<int>();
+
+            char[] splitChars = new char[] { '[', ']', ' ' };
+
+
+            string[] stringValuefromLine = strLine.Split(splitChars);
+            int[] intValueFromLine = new int[stringValuefromLine.Length];
+
+            foreach (string str in stringValuefromLine)
+            {
+
+            }
+
+            //System.Text.Encoding.ASCII.GetBytes(hexStringValueFromLine);
+
+            return intValueFromLine;
+
+        }
+
+        public struct lppCashIn
+        {
+
+            public short usNumber; //usNumber = [1]
+            public string fwType; //= [WFS_CDM_TYPEREJECTCASSETTE(2)]
+            public string fwItemType; //= [WFS_CIM_CITYPINDIVIDUAL(4)]
+            public string cUnitID; // = [S0_I0]ASCI
+            public byte[] cUnitIDHex; //(hex) = [0x53 0x30 0x5F 0x49 0x30]
+            public string cCurrencyID; //(asc) = [   ]
+            public byte[] cCurrencyIDHex; //(hex) = [0x20 0x20 0x20]
+            public ulong ulValues; // = [0]
+            public ulong ulCashInCount; // = [0]
+            public ulong ulCount; // = [26]
+            public ulong ulMaximum; // = [1500]
+            public string usStatus; // = [WFS_CDM_STATCUOK(0)]
+            public bool bAppLock; // = [FALSE]       
+            public int usNumPhysicalCUs;
+            public lppNoteNumberList lppNoteNumberListStruct;
+            public lppPhysical lppPhysicalstruct;
+            public string requestId;
+
+        }
+
+        public struct lppPhysical
+        {
+
+            public string lpPhysicalPositionName;
+            public string cUnitId;
+            public byte[] cUnitIdHex;
+            public int ulCashInCount;
+            public int ulCount;
+            public int ulMaximum;
+            public string usPStatus;
+            public string bHardwareSensors;
+            public string lpszExtra;
+        }
+
+        public struct lppNoteNumberList
+        {
+            public int usNumOfNoteNumbers;
+            public lppNoteNumber[] lppNoteNumberStruct;
+        }
+
+        public struct lppNoteNumber
+        {
+            public int usNoteID;
+            public int ulCount;
+        }
+
+        public static lppNoteNumber[] returnNoteDetails(int index, int recurrence, string[] cuParsedArray, List<int> indexes)
+        {
+            lppNoteNumber[] noteDetails = new lppNoteNumber[recurrence];
+
+            string[] noteDetailsArray = new string[2];
+
+            for (int i = 0; i < recurrence; i++)
+            {
+                if (recurrence == 1)
+                {
+                    Array.Copy(cuParsedArray, index, noteDetailsArray, 0, 2);
+                    noteDetails[i].usNoteID = Convert.ToInt16(splitString(noteDetailsArray[0]));
+                    noteDetails[i].ulCount = Convert.ToInt16(splitString(noteDetailsArray[1]));
+                }
+                else if (recurrence > 1)
+                {
+                    Array.Copy(cuParsedArray, indexes[indexes.IndexOf(index)], noteDetailsArray, 0, 2);
+                    noteDetails[i].usNoteID = Convert.ToInt16(splitString(noteDetailsArray[0]));
+                    noteDetails[i].ulCount = Convert.ToInt16(splitString(noteDetailsArray[1]));
+                    index = index + 5;
+
+                }
+            }
+
+            return noteDetails;
+
+        }
+
+
+    }
+}
+//short usTellerID; //usTellerID = [0]
+//       short usCount; //usCount = [6]
+//       cashUnitCDM[] lppList; //lppList[0]
+//       short usNumber; //usNumber = [1]
+//       string usType; //= [WFS_CDM_TYPEREJECTCASSETTE(2)]
+//       string lpszCashUnitName;// = []
+//       string cUnitID; // = [S0_I0]ASCI
+//       byte[] cUnitIDHex; //(hex) = [0x53 0x30 0x5F 0x49 0x30]
+//       ulong cCurrencyID; //(asc) = [   ]
+//       byte[] cCurrencyIDHex; //(hex) = [0x20 0x20 0x20]
+//       ulong ulValues; // = [0]
+//       ulong ulInitialCount; // = [0]
+//       ulong ulCount; // = [26]
+//       ulong ulRejectCount; // = [0]
+//       ulong ulMinimum; // = [0]
+//       ulong ulMaximum; // = [1500]
+//       bool bAppLock; // = [FALSE]
+//       short usStatus; // = [WFS_CDM_STATCUOK(0)]
+//       short usNumPhysicalCUs; // = [1]        
+//       short lppPhysicalLppPhysical; //[0]=
+//       string lppPhysicalLpPhysicalPositionName;// = [S0_I0]
+//       string lppPhysicalCUnitID; //(asc) = [S0_I0]
+//       byte[] lppPhysicalCUnitIDHex; //(hex) = [0x53 0x30 0x5F 0x49 0x30]
+//       ulong lppPhysicalUlInitialCount; // = [0]
+//       ulong lppPhysicalUlCount;  // = [26]
+//       ulong lppPhysicalUlRejectCount; // = [0]
+//       ulong lppPhysicalUlMaximum; // = [1500]
+//       short lppPhysicalUsPStatus; // = [WFS_CDM_STATCUOK(0)]
+//       bool lppPhysicalBHardwareSensor; // = [FALSE]
+
+
+//string[] croppedArray = new string[14];
+//                   Array.Copy(cuParsedArray, indexLppCashIn[0], croppedArray, 0, 14);
+//                   lppCashIn lppCashInObject = new lppCashIn();
+//                   lppCashInObject.usNumber = Convert.ToInt16(splitString(croppedArray[0]));
+//                   lppCashInObject.fwType = splitString(croppedArray[1]);
+//                   lppCashInObject.fwItemType = splitString(croppedArray[2]);
+//                   lppCashInObject.cUnitID = splitString(croppedArray[3]);
+//                   lppCashInObject.cUnitIDHex = splitStringHexArray(croppedArray[4]);
+//                   lppCashInObject.cCurrencyID = splitString(croppedArray[5]);
+//                   lppCashInObject.cCurrencyIDHex = splitStringHexArray(croppedArray[6]);
+//                   lppCashInObject.ulValues = Convert.ToUInt16(splitString(croppedArray[7]));
+//                   lppCashInObject.ulCashInCount = Convert.ToUInt16(splitString(croppedArray[8]));
+//                   lppCashInObject.ulCount = Convert.ToUInt16(splitString(croppedArray[9]));
+//                   lppCashInObject.ulMaximum = Convert.ToUInt16(splitString(croppedArray[10]));
+//                   lppCashInObject.usStatus = splitString(croppedArray[11]);
+//                   lppCashInObject.bAppLock = Convert.ToBoolean(splitString(croppedArray[12]));

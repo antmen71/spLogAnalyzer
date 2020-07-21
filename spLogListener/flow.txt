@@ -1,0 +1,19 @@
+﻿Select SP button
+	select logs
+	add log file names to list (spLogFileNames)
+All CashIn Transaction Button
+	CashInTotal objects = 0
+	create fileStreams from spLogFileNames list
+	create header from spLogFileNames list
+	check header dwSize length to see if the log is valid
+	createFileStreamHeaderSpLogLineArray : extract SP log lines into spLogBuff (spLogLines) array 
+	returnCashInLines : extract CashInLines from spLogBuff array (cashInLines)
+	check if cashInLines has any member, if not -> MessageBox.Show("No CashIn Transaction in the log")
+	reverse the cashInLines list
+	returnCashInTransaction.Count : extract the cashIn transactions seperately and find the index to remove the transaction from the list
+	returnCashInTransaction : get the spLogLines for cashIn transactions seperately into the list (cashInReturnLines)
+	moreCashInLines : check if there are more cashIn transactions in cashInLines
+	prepareCashInObjectsForCompareCashInInformation(cashInReturnLines) : fill the cashInEndObjectList, iCashCountObjectList, hrCashInObjectList, iStoreMoneyExObjectList, hrCashInEndObjectList, wfsCmdCimCashInObject, iRetractEndObject 
+    createCompareObjects : create objects with the same members to compare them. Fill the richTextBox1 with the seperate transactions (not aggregating iCashCount, hrCashIn etc)
+	compareCashInObjects(List<List<cashUnitCIM.compareObject>> compareObjects) : compare CashInObjects for total amounts per transaction. Fill the richTexBox2 with aggregated totals with correct amounts, fill the richTextBox3 with inconsistent total amount.
+	allCashInObjectsTotal(int cashCountTotal, int hrCashInTotal, int iStoreMoneyTotal, int hrCashInEndTotal, int cashInEndTotal, int iRetractTotal) : fill richTextBox4 with SP log(s) total deposit amount

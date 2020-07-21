@@ -1,0 +1,9 @@
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\bin\Debug\spLogListener.exe
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\bin\Debug\spLogListener.pdb
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\spLogListener.Form1.resources
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\spLogListener.Properties.Resources.resources
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\spLogListener.exe
+C:\Users\SD\Documents\Visual Studio 2010\Projects\spLogListener\spLogListener\obj\x86\Debug\spLogListener.pdb
